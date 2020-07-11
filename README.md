@@ -29,3 +29,4 @@ To get more help on the Angular CLI use `ng help` or go check out the [Angular C
 # Referenced
 - https://css-tricks.com/snippets/css/a-guide-to-flexbox/
 - https://academind.com/learn/css/understanding-css/flexbox-basics-container/
+- other: https://github.com/bloodymind/angular-material-dashboard

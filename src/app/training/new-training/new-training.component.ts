@@ -1,32 +1,25 @@
-import { Excersise } from './../excersise.model';
-import { TrainingService } from './../training.service';
-import { Component, OnInit, EventEmitter, Output } from '@angular/core';
-import { DestroyAble } from '../../common/DestroyAble';
-import { takeUntil } from 'rxjs/operators';
+import { Component, OnInit } from '@angular/core';
+import { NgForm } from '@angular/forms';
+
+import { TrainingService } from '../training.service';
+import { Exercise } from '../exercise.model';
 
 @Component({
   selector: 'app-new-training',
   templateUrl: './new-training.component.html',
   styleUrls: ['./new-training.component.css']
 })
-export class NewTrainingComponent extends DestroyAble implements OnInit {
-  @Output() trainingStart = new EventEmitter<void>();
-  availableExcersise: Excersise [];
+export class NewTrainingComponent implements OnInit {
+  exercises: Exercise[] = [];
 
-  constructor(private trainingService: TrainingService) {
-    super();
-  }
+  constructor(private trainingService: TrainingService) { }
 
   ngOnInit() {
-    this.trainingService.getExcersise().pipe(
-      takeUntil(this.destroyAble$)
-    ).subscribe(data => {
-      this.availableExcersise = data;
-    });
+    this.exercises = this.trainingService.getAvailableExercises();
   }
 
-  onStartTraining() {
-    this.trainingStart.emit();
+  onStartTraining(form: NgForm) {
+    this.trainingService.startExercise(form.value.exercise);
   }
 
 }
