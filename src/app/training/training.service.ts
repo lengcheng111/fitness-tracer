@@ -1,9 +1,11 @@
+import { FirebaseConst } from './../common/firebase_common';
 import { Injectable } from '@angular/core';
 import { AngularFirestore } from 'angularfire2/firestore';
 import { Subject } from 'rxjs/Subject';
 import 'rxjs/add/operator/map';
 
 import { Exercise } from './exercise.model';
+import { Observable } from 'rxjs';
 
 @Injectable()
 export class TrainingService {
@@ -17,7 +19,7 @@ export class TrainingService {
 
   fetchAvailableExercises() {
     this.db
-      .collection('availableExercises')
+      .collection(FirebaseConst.ROOT_COLLECTION)
       .snapshotChanges()
       .map(docArray => {
         return docArray.map(doc => {
@@ -43,7 +45,7 @@ export class TrainingService {
   }
 
   completeExercise() {
-    this.exercises.push({
+    this.addDataToDatabase({
       ...this.runningExercise,
       date: new Date(),
       state: 'completed'
@@ -53,7 +55,7 @@ export class TrainingService {
   }
 
   cancelExercise(progress: number) {
-    this.exercises.push({
+    this.addDataToDatabase({
       ...this.runningExercise,
       duration: this.runningExercise.duration * (progress / 100),
       calories: this.runningExercise.calories * (progress / 100),
@@ -68,7 +70,11 @@ export class TrainingService {
     return { ...this.runningExercise };
   }
 
-  getCompletedOrCancelledExercises() {
-    return this.exercises.slice();
+  getCompletedOrCancelledExercises(): Observable<Exercise> {
+    return this.db.collection(FirebaseConst.COMPLETED_OR_CANCELLED_COLLECTION).valueChanges();
+  }
+
+  private addDataToDatabase(exersise: Exercise) {
+    this.db.collection(FirebaseConst.COMPLETED_OR_CANCELLED_COLLECTION).add(exersise);
   }
 }
