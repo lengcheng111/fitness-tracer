@@ -2,23 +2,24 @@ import { FirebaseConst } from './../common/firebase_common';
 import { Injectable } from '@angular/core';
 import { AngularFirestore } from 'angularfire2/firestore';
 import { Subject } from 'rxjs/Subject';
+import { Subscription } from 'rxjs';
 import 'rxjs/add/operator/map';
 
 import { Exercise } from './exercise.model';
-import { Observable } from 'rxjs';
 
 @Injectable()
 export class TrainingService {
   exerciseChanged = new Subject<Exercise>();
   exercisesChanged = new Subject<Exercise[]>();
+  finishedExercisesChanged = new Subject<Exercise[]>();
   private availableExercises: Exercise[] = [];
   private runningExercise: Exercise;
-  private exercises: Exercise[] = [];
+  private fbSubs: Subscription[] = [];
 
   constructor(private db: AngularFirestore) {}
 
   fetchAvailableExercises() {
-    this.db
+    this.fbSubs.push(this.db
       .collection(FirebaseConst.ROOT_COLLECTION)
       .snapshotChanges()
       .map(docArray => {
@@ -34,7 +35,7 @@ export class TrainingService {
       .subscribe((exercises: Exercise[]) => {
         this.availableExercises = exercises;
         this.exercisesChanged.next([...this.availableExercises]);
-      });
+      }));
   }
 
   startExercise(selectedId: string) {
@@ -70,11 +71,20 @@ export class TrainingService {
     return { ...this.runningExercise };
   }
 
-  getCompletedOrCancelledExercises(): Observable<Exercise> {
-    return this.db.collection(FirebaseConst.COMPLETED_OR_CANCELLED_COLLECTION).valueChanges();
+  fetchCompletedOrCancelledExercises() {
+    this.fbSubs.push(this.db
+      .collection(FirebaseConst.COMPLETED_OR_CANCELLED_COLLECTION)
+      .valueChanges()
+      .subscribe((exercises: Exercise[]) => {
+        this.finishedExercisesChanged.next(exercises);
+      }));
   }
 
-  private addDataToDatabase(exersise: Exercise) {
-    this.db.collection(FirebaseConst.COMPLETED_OR_CANCELLED_COLLECTION).add(exersise);
+  cancelSubscriptions() {
+    this.fbSubs.forEach(sub => sub.unsubscribe());
+  }
+
+  private addDataToDatabase(exercise: Exercise) {
+    this.db.collection(FirebaseConst.COMPLETED_OR_CANCELLED_COLLECTION).add(exercise);
   }
 }
