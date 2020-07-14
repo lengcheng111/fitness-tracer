@@ -14,13 +14,19 @@ import { Exercise } from '../exercise.model';
 export class NewTrainingComponent implements OnInit, OnDestroy {
   exercises: Exercise[];
   exerciseSubscription: Subscription;
+  isLoadedExersise = false;
 
   constructor(private trainingService: TrainingService) {}
 
   ngOnInit() {
-    this.exerciseSubscription = this.trainingService.exercisesChanged.subscribe(
-      exercises => (this.exercises = exercises)
-    );
+    this.exerciseSubscription = this.trainingService.exercisesChanged.subscribe(exercises => {
+        this.exercises = exercises;
+        this.isLoadedExersise = true;
+    });
+    this.fetchExersises();
+  }
+
+  fetchExersises() {
     this.trainingService.fetchAvailableExercises();
   }
 
